@@ -20,7 +20,7 @@
 	sathy.prototype = {
 		constructor: sathy,
 		on: function  (type,handle) {
-			if (this.element) {
+			if (this.element && type && sathy.isFunction(handle)) {
 				if (this.element.addEventListener) {
 					this.element.addEventListener(type,handle,false);
 				} else if(this.element.attachEvent) {
@@ -31,24 +31,34 @@
 			}
 			return this;
 		},
-		off: function  (type) {
+		off: function  (type,handle) {
+			if (this.element) {
+				if (this.element.addEventListener) {
+					this.element.addEventListener(type,handle,false);
+				} else if(this.element.attachEvent) {
+					this.element.attachEvent('on' + type,handle);
+				} else {
+					this.element['on' + type] = handle;
+				}
+			}
+			return this;
 			if (this.element && type) {
 				this.element['on' + type] = null;
 			}
 			return this;
 		},
-		css: function  (style) {
+		css: function  (name,value) {
 			if (!this.element) return;
 			var styleArr,key;
-			if ((typeof style === 'string') && arguments[1]) {
-				key = style;
-				style = {};
-				style[key] = arguments[1];
+			if ((typeof name === 'string') && (typeof value === 'string')) {
+				key = name;
+				name = {};
+				name[key] = value;
 			}
-			if (style instanceof Object) {
+			if (name instanceof Object) {
 				styleArr = [];
-				for (key in style) {
-					styleArr.push(key + ':' + style[key]);
+				for (key in name) {
+					styleArr.push(key + ':' + name[key]);
 				}
 				if (document.all) {
 					this.element.style.cssText += ';' + styleArr.join(';') + ';';
@@ -68,6 +78,23 @@
 			}
 		}
 		return defaultConfig;
+	};
+	sathy.isArrayLike = function  (obj) {
+		var len;
+		//for null,undefined,false,0,''
+		if (!obj) return false;
+		//obj is an Array
+		if(obj instanceof Array) return true;
+		len = obj.length;
+		//length does not exsit in obj or length not a number
+		if (len === undefined || typeof len !== 'number') return false;
+		//if length > 0 and obj[length-1] exsit
+		if(len > 0 && obj[len-1] !== undefined) return true;
+		//for anything else 
+		return false;
+	};
+	sathy.isFunction = function  (fn) {
+		return (fn instanceof Function);
 	};
 	sathy.serialize = function  (obj) {
 		var str = [],key;
@@ -138,7 +165,7 @@
 						var response = xhr.responseText;
 						if (config.dataType === 'json') {
 							response = sathy.parseJSON(response);
-						};
+						}
 						config.succees.call(null,response);
 					}
 				} else {
@@ -152,14 +179,14 @@
 		xhr.send(sathy.serialize(config.data));
 		return xhr;
 	};
-	//parseJSON is copy from jQuery
+	//parseJSON is copied from jQuery
 	sathy.parseJSON = function( data ) {
 		if ( typeof data !== "string" || !data ) {
 			return null;
 		}
 		// Make sure leading/trailing whitespace is removed (IE can't handle it)
 		data = data.replace(/^\s+|\s+$/g,'');
-		
+
 		// Make sure the incoming data is actual JSON
 		// Logic borrowed from http://json.org/json2.js
 		if ( /^[\],:{}\s]*$/.test(data.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
@@ -173,6 +200,14 @@
 
 		} else {
 			throw new Error('Invalid JSON string');
+		}
+	};
+	sathy.each = function  (arr,fn) {
+		var i,len;
+		if (sathy.isArray(arr) && sathy.isFunction(fn)) {
+			for (i = 0, len = arr.length; i < len; ++i) {
+				fn.call(null,i,arr[i]);
+			}
 		}
 	};
 	window.$ = window.sathy= sathy;
