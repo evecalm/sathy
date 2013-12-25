@@ -1,159 +1,21 @@
 
 ;(function  (window,undefined) {
-	function sathy (id) {
+	function sathy (selector) {
 		if (!(this instanceof sathy)) {
-			return new sathy(id)
+			return new sathy(selector)
 		}
-		// console.log(id)
-		if (!id) {
-			this.element = null
-		} else if (id.nodeType) {
-			this[0] = id
-			this.length = 1
-		} else {
-			if (typeof id === 'string') {
-				this.element = document.getElementById(id)
-			} else {
-				throw new Error('Sathy not support yet!')
-			}
+		var ele;
+		if (!(selector instanceof sathy)) {
+			ele = document.querySelectorAll(selector);
+			console.log('instanceof...');
 		}
+		// console.log('here');
+		this.makeArray( ele );
+		return this;
 	}
 
-	sathy.prototype = {
 
-		constructor: sathy,
-
-		length: 0,
-
-		splice: Array.prototype.splice,
-
-		on: function  (type,handle) {
-			if (this.element && type && sathy.isFunction(handle)) {
-				if (this.element.addEventListener) {
-					this.element.addEventListener(type,handle,false)
-				} else if(this.element.attachEvent) {
-					this.element.attachEvent('on' + type,handle)
-				} else {
-					this.element['on' + type] = handle
-				}
-			}
-			return this
-		},
-
-		off: function  (type,handle) {
-			if (this.element) {
-				if (handle) {
-					if (this.element.removeEventListener) {
-						this.element.removeEventListener(type,handle)
-					} else if(this.element.detachEvent) {
-						this.element.detachEvent('on' + type,handle)
-					} else {
-						this.element['on' + type] = null
-					}
-				} else if(type) {
-					this.element['on' + type] = null
-				} else{
-
-				}
-			}
-			return this
-		},
-
-		css: function  (name,value) {
-			if (!this.element) return
-			var styleArr,key
-			if ((typeof name === 'string') && (typeof value === 'string')) {
-				key = name
-				name = {}
-				name[key] = value
-			}
-			if (name instanceof Object) {
-				styleArr = []
-				for (key in name) {
-					styleArr.push(key + ':' + name[key])
-				}
-				if (document.all) {
-					this.element.style.cssText += '' + styleArr.join('') + ''
-				} else{
-					this.element.style.cssText += styleArr.join('') + ''
-				}
-			}
-			return this
-		},
-
-		html: function(html){
-			if(!this.element){
-				if (undefined === html) {
-					return this
-				} else {
-					return ''
-				}
-			}
-			if (undefined === html) {
-				return this.element.innerHTML
-			} else {
-				this.element.innerHTML = html + ''
-				return this
-			}
-		},
-
-		text: function  (text) {
-			if(!this.element){
-				if (undefined === text) {
-					return this
-				} else {
-					return ''
-				}
-			}
-			if (undefined === text) {
-				return this.element.innerText
-			} else {
-				this.element.innerText = text + ''
-				return this
-			}
-		},
-
-		attr: function  (name,value) {
-			var ele = this.element
-			if(undefined == name || !ele) return this
-			name = name + ''
-			if (undefined == value) {
-				return ele.getAttribute(name)
-			} else {
-				if (sathy.isLiteral(value)) {
-					ele.setAttribute(name,value)
-				}
-				return this
-			}
-		},
-
-		removeAttr: function  (name) {
-			var ele = this.element
-			if(!ele || undefined == name) return this
-			ele.removeAttribute(name)
-			return this
-		},
-
-		data: function  (name,value) {
-			var ele = this.element;
-			if(!ele) return this
-
-			if (undefined === name) {
-				//to be continue...
-			}
-
-			if (undefined === value) {
-				return ele.getAttribute('data-' + name)
-			} else {
-				if (sathy.isLiteral(value)) {
-					ele.setAttribute('data-' + name, value)
-				}
-				return this
-			}
-		}
-	}
-
-	sathy.extend = function  (config,defaults) {
+	sathy.prototype.extend = sathy.extend = function  (config,defaults) {
 		if(!arguments.length) return this
 		var obj = {},key
 		if ( 1 === arguments.length) {
@@ -195,10 +57,7 @@
 		},
 
 		isLiteral: function(literal){
-			if(literal == null || literal instanceof Object)
-				return false
-			else
-				return true
+			return !(literal == null) && !(literal instanceof Object)
 		},
 
 		serialize: function  (obj) {
@@ -332,15 +191,168 @@
 				return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}")
 			}
 		},
-
 		each: function  (arr,fn) {
 			var i,len
-			if (sathy.isArray(arr) && sathy.isFunction(fn)) {
+			if (sathy.isArrayLike(arr) && sathy.isFunction(fn)) {
 				for (i = 0, len = arr.length; i < len; ++i) {
-					fn.call(null,i,arr[i])
+					// console.log(arr[i]);
+					fn.call(null,arr[i])
 				}
 			}
 		}
 	})
+
+	sathy.prototype.extend({
+
+		constructor: sathy,
+
+		length: 0,
+
+		splice: Array.prototype.splice,
+
+		makeArray: function (ele) {
+			if (!ele) return
+			if (!sathy.isArrayLike(ele)) {
+				ele = [ ele ]
+			}
+			console.log('arr %o',ele);
+			console.log('makeArray %o',Array.prototype.slice.call(ele));
+			Array.prototype.push.apply(this,Array.prototype.slice.call(ele))
+			// Array.prototype.push.apply(this, ele )
+		},
+
+		css: function  (name,value) {
+			if (!this.element) return
+			var styleArr,key
+			if ((typeof name === 'string') && (typeof value === 'string')) {
+				key = name
+				name = {}
+				name[key] = value
+			}
+			if (name instanceof Object) {
+				styleArr = []
+				for (key in name) {
+					styleArr.push(key + ':' + name[key])
+				}
+				if (document.all) {
+					this.element.style.cssText += '' + styleArr.join('') + ''
+				} else{
+					this.element.style.cssText += styleArr.join('') + ''
+				}
+			}
+			return this
+		},
+
+		html: function(html){
+			if(!this.element){
+				if (undefined === html) {
+					return this
+				} else {
+					return ''
+				}
+			}
+			if (undefined === html) {
+				return this.element.innerHTML
+			} else {
+				this.element.innerHTML = html + ''
+				return this
+			}
+		},
+
+		text: function  (text) {
+			if(!this.element){
+				if (undefined === text) {
+					return this
+				} else {
+					return ''
+				}
+			}
+			if (undefined === text) {
+				return this.element.innerText
+			} else {
+				this.element.innerText = text + ''
+				return this
+			}
+		},
+
+		attr: function  (name,value) {
+			var ele = this.element
+			if(undefined == name || !ele) return this
+			name = name + ''
+			if (undefined == value) {
+				return ele.getAttribute(name)
+			} else {
+				if (sathy.isLiteral(value)) {
+					ele.setAttribute(name,value)
+				}
+				return this
+			}
+		},
+
+		removeAttr: function  (name) {
+			var ele = this.element
+			if(!ele || undefined == name) return this
+			ele.removeAttribute(name)
+			return this
+		},
+
+		data: function  (name,value) {
+			var ele = this.element;
+			if(!ele) return this
+
+			if (undefined === name) {
+				//to be continue...
+			}
+
+			if (undefined === value) {
+				return ele.getAttribute('data-' + name)
+			} else {
+				if (sathy.isLiteral(value)) {
+					ele.setAttribute('data-' + name, value)
+				}
+				return this
+			}
+		},
+
+		map: function (fn) {
+			sathy.each(this,fn)
+		}
+	})
+
+	if(window.addEventListener) {
+		sathy.prototype.on = function (type,handle) {
+			this.map(function (ele) {
+				ele.addEventListener((type + '').toLowerCase(),handle,false)
+			})
+		}
+		sathy.prototype.off = function (type,handle) {
+			this.map(function (ele) {
+				ele.removeEventListener((type + '').toLowerCase(),handle,false)
+			})
+		}
+	} else if(window.attachEvent) {
+		sathy.prototype.on = function (type,handle) {
+			this.map(function (ele) {
+				ele.attachEvent(('on' + type + '').toLowerCase(),handle)
+			})
+		}
+		sathy.prototype.off = function (type,handle) {
+			this.map(function (ele) {
+				ele.detachEvent(('on' + type + '').toLowerCase(),handle)
+			})
+		}
+	} else {
+		sathy.prototype.on = function (type,handle) {
+			this.map(function (ele) {
+				ele[('on' + type + '').toLowerCase()] = handle
+			})
+		}
+		sathy.prototype.off = function (type) {
+			this.map(function (ele) {
+				ele[('on' + type + '').toLowerCase()] = null
+			})
+		}
+	}
+
 	window.$ = window.sathy= sathy
 })(window)
