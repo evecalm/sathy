@@ -319,35 +319,41 @@
 
 	if(window.addEventListener) {
 		sathy.prototype.on = function (type,handle) {
+			type = (type + '').toLowerCase();
 			this.map(function (ele) {
-				ele.addEventListener((type + '').toLowerCase(),handle,false);
+				ele.addEventListener(type,handle,false);
 			});
 		};
 		sathy.prototype.off = function (type,handle) {
+			type = (type + '').toLowerCase();
 			this.map(function (ele) {
-				ele.removeEventListener((type + '').toLowerCase(),handle,false);
+				ele.removeEventListener(type,handle,false);
 			});
 		};
 	} else if(window.attachEvent) {
 		sathy.prototype.on = function (type,handle) {
+			type = (type + '').toLowerCase();
 			this.map(function (ele) {
-				ele.attachEvent(('on' + type + '').toLowerCase(),handle);
+				ele.attachEvent('on' + type,handle);
 			});
 		};
 		sathy.prototype.off = function (type,handle) {
+			type = (type + '').toLowerCase();
 			this.map(function (ele) {
-				ele.detachEvent(('on' + type + '').toLowerCase(),handle);
+				ele.detachEvent('on' + type,handle);
 			});
 		};
 	} else {
 		sathy.prototype.on = function (type,handle) {
+			type = (type + '').toLowerCase();
 			this.map(function (ele) {
-				ele[('on' + type + '').toLowerCase()] = handle;
+				ele[ 'on' + type ] = handle;
 			});
 		};
 		sathy.prototype.off = function (type) {
+			type = (type + '').toLowerCase();
 			this.map(function (ele) {
-				ele[('on' + type + '').toLowerCase()] = null;
+				ele[ 'on' + type ] = null;
 			});
 		};
 	}
