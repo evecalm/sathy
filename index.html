@@ -14,6 +14,16 @@
 			event = event || window.event;
 			alert('hahah');
 		});
+		$.ajax({
+			url: 'https://api.sstackexchange.com/2.2/questions?site=stackoverflow&filter=&key=Z6a2)O5uhYVuODDe4WLhOg((',
+			dataType: 'json',
+			success: function (data) {
+				console.error(' return data %o',data);
+			},
+			error: function () {
+				console.error(' error %o ', arguments);
+			}
+		});
 	</script>
 </body>
 </html>

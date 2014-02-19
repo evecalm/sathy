@@ -1,18 +1,11 @@
 
 ;(function  (window,undefined) {
+	var doc = window.document;
 	function sathy (selector) {
 		if (!(this instanceof sathy)) {
 			return new sathy(selector);
 		}
-		var ele;
-		if ( selector instanceof sathy ) {
-			return selector;
-		}
-
-		ele = document.querySelectorAll(selector);
-		// console.log('here');
-		this.makeArray( ele );
-		return this;
+		this.init( selector );
 	}
 
 
@@ -122,7 +115,7 @@
 			xhr.onreadystatechange = function  () {
 				if (xhr.readyState == 1) {
 					if (config.async && config.timeout > 0) {
-						setTimeout(function() {
+						timer = setTimeout(function() {
 								xhr.abort('timeout');
 							}, config.timeout);
 					}
@@ -182,7 +175,7 @@
 				// recurse array or object
 				var n, v, json = [], arr = (obj && obj.constructor == Array);
 				for (n in obj) {
-					v = obj[n],t = typeof(v);
+					v = obj[n];t = typeof(v);
 					if (t == "string") v = '"'+v+'"';
 					else if (t == "object" && v !== null) v = JSON.stringify(v);
 					json.push((arr ? "" : '"' + n + '":') + String(v));
@@ -190,12 +183,13 @@
 				return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
 			}
 		},
+
 		each: function  (arr,fn) {
 			var i,len;
 			if (sathy.isArrayLike(arr) && sathy.isFunction(fn)) {
 				for (i = 0, len = arr.length; i < len; ++i) {
 					// console.log(arr[i]);
-					fn.call(null,arr[i]);
+					fn.call(null,arr[i],i,arr);
 				}
 			}
 		}
@@ -203,24 +197,27 @@
 
 	sathy.prototype.extend({
 
-		constructor: sathy,
-
 		length: 0,
-
+		//make sathy looks like an array
 		splice: Array.prototype.splice,
 
+		init: function (selector) {
+			if ( selector instanceof sathy ) {
+				return selector;
+			}
+			this.makeArray( doc.querySelectorAll(selector) );
+		},
+
 		makeArray: function (ele) {
-			if (!ele) return;
+			if (!ele || !ele.length) return;
 			if (!sathy.isArrayLike(ele)) {
 				ele = [ ele ];
 			}
-			console.log('arr %o',ele);
-			console.log('makeArray %o',Array.prototype.slice.call(ele));
 			Array.prototype.push.apply(this,Array.prototype.slice.call(ele));
 		},
 
 		css: function  (name,value) {
-			if (!this.element) return;
+			if (!this.length) return;
 			var styleArr,key;
 			if ((typeof name === 'string') && (typeof value === 'string')) {
 				key = name;
@@ -232,17 +229,16 @@
 				for (key in name) {
 					styleArr.push(key + ':' + name[key]);
 				}
-				if (document.all) {
-					this.element.style.cssText += '' + styleArr.join('') + '';
-				} else{
-					this.element.style.cssText += styleArr.join('') + '';
-				}
+				styleArr = ';' + styleArr.join(';') + ';';
+				this.map(function (ele) {
+					ele.style.cssText += styleArr;
+				});
 			}
 			return this;
 		},
 
 		html: function(html){
-			if(!this.element){
+			if(!this.length){
 				if (undefined === html) {
 					return this;
 				} else {
@@ -250,15 +246,17 @@
 				}
 			}
 			if (undefined === html) {
-				return this.element.innerHTML;
+				return this[0].innerHTML;
 			} else {
-				this.element.innerHTML = html + '';
+				this.map(function (ele) {
+					ele.innerHTML = html + '';
+				});
 				return this;
 			}
 		},
 
 		text: function  (text) {
-			if(!this.element){
+			if(!this.length){
 				if (undefined === text) {
 					return this;
 				} else {
@@ -266,48 +264,63 @@
 				}
 			}
 			if (undefined === text) {
-				return this.element.innerText;
+				return this[0].innerText;
 			} else {
-				this.element.innerText = text + '';
+				text += '';
+				this.map(function (ele) {
+					ele.innerText = text;
+				});
 				return this;
 			}
 		},
 
 		attr: function  (name,value) {
-			var ele = this.element;
-			if(undefined === name || !ele) return this;
-			name = name + '';
-			if (undefined === value) {
-				return ele.getAttribute(name);
-			} else {
-				if (sathy.isLiteral(value)) {
-					ele.setAttribute(name,value);
+			if (!this.length) {
+				if (undefined === value) {
+					return '';
+				} else {
+					return this;
 				}
+			}
+			if(undefined === name) return this;
+			name += '';
+			if (undefined === value) {
+				return this[0].getAttribute(name);
+			} else {
+				value += '';
+				this.map(function (ele) {
+					ele.setAttribute(name,value);
+				});
 				return this;
 			}
 		},
 
 		removeAttr: function  (name) {
-			var ele = this.element;
-			if(!ele || undefined === name) return this;
-			ele.removeAttribute(name);
+			if(!this.length || undefined === name) return this;
+			name += '';
+			this.map(function (ele) {
+				ele.removeAttribute(name);
+			});
 			return this;
 		},
 
 		data: function  (name,value) {
-			var ele = this.element;
-			if(!ele) return this;
-
-			if (undefined === name) {
-				//to be continue...
+			if(!this.length) {
+				if (undefined === value) {
+					return '';
+				} else {
+					return this;
+				}
 			}
 
 			if (undefined === value) {
-				return ele.getAttribute('data-' + name);
+				return this[0].getAttribute('data-' + name);
 			} else {
-				if (sathy.isLiteral(value)) {
-					ele.setAttribute('data-' + name, value);
-				}
+				name = 'data-' + name;
+				value += '';
+				this.map(function (ele) {
+					ele.setAttribute(name, value);
+				});
 				return this;
 			}
 		},
@@ -357,6 +370,6 @@
 			});
 		};
 	}
-
+	if (window.$) window._$ = window.$;
 	window.$ = window.sathy= sathy;
 })(window);
