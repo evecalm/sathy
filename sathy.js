@@ -202,6 +202,18 @@
 				}
 			}
 			return result;
+		},
+
+		ltrim: function (str) {
+			return (str + '').replace(/^\s+/, '');
+		},
+
+		rtrim: function (str) {
+			return (str + '').replace(/\s+$/, '');
+		},
+
+		trim: function (str) {
+			return (str + '').replace(/^\s+|\s+$/g, '');
 		}
 	});
 
