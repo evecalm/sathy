@@ -165,7 +165,8 @@
 		},
 		//obj to JSON string, copied form JSON.js
 		stringify: (window.JSON && window.JSON.stringify) || function (obj) {
-			var t = typeof obj;
+			var t = typeof obj,
+				me = arguments.callee;
 			if (t != "object" || obj === null) {
 				// simple data type
 				if (t == "string") obj = '"'+obj+'"';
@@ -177,7 +178,7 @@
 				for (n in obj) {
 					v = obj[n];t = typeof(v);
 					if (t == "string") v = '"'+v+'"';
-					else if (t == "object" && v !== null) v = JSON.stringify(v);
+					else if (t == "object" && v !== null) v = me(v);
 					json.push((arr ? "" : '"' + n + '":') + String(v));
 				}
 				return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
@@ -186,12 +187,21 @@
 
 		each: function  (arr,fn) {
 			var i,len;
-			if (sathy.isArrayLike(arr) && sathy.isFunction(fn)) {
+			if ( sathy.isArrayLike(arr) && sathy.isFunction(fn)) {
 				for (i = 0, len = arr.length; i < len; ++i) {
-					// console.log(arr[i]);
 					fn.call(null,arr[i],i,arr);
 				}
 			}
+		},
+
+		map: function (arr, fn) {
+			var i, len, result = [];
+			if ( sathy.isArrayLike(arr) && sathy.isFunction(fn)) {
+				for (i = 0, len = arr.length; i < len; ++i) {
+					result.push( fn.call(null,arr[i],i,arr) );
+				}
+			}
+			return result;
 		}
 	});
 
@@ -205,7 +215,11 @@
 			if ( selector instanceof sathy ) {
 				return selector;
 			}
-			this.makeArray( doc.querySelectorAll(selector) );
+			if (selector instanceof HTMLElement) {
+				this.makeArray( [selector] );
+			} else {
+				this.makeArray( doc.querySelectorAll(selector) );
+			}
 		},
 
 		makeArray: function (ele) {
@@ -230,7 +244,7 @@
 					styleArr.push(key + ':' + name[key]);
 				}
 				styleArr = ';' + styleArr.join(';') + ';';
-				this.map(function (ele) {
+				this.each(function (ele) {
 					ele.style.cssText += styleArr;
 				});
 			}
@@ -248,7 +262,7 @@
 			if (undefined === html) {
 				return this[0].innerHTML;
 			} else {
-				this.map(function (ele) {
+				this.each(function (ele) {
 					ele.innerHTML = html + '';
 				});
 				return this;
@@ -267,7 +281,7 @@
 				return this[0].innerText;
 			} else {
 				text += '';
-				this.map(function (ele) {
+				this.each(function (ele) {
 					ele.innerText = text;
 				});
 				return this;
@@ -288,7 +302,7 @@
 				return this[0].getAttribute(name);
 			} else {
 				value += '';
-				this.map(function (ele) {
+				this.each(function (ele) {
 					ele.setAttribute(name,value);
 				});
 				return this;
@@ -298,7 +312,7 @@
 		removeAttr: function  (name) {
 			if(!this.length || undefined === name) return this;
 			name += '';
-			this.map(function (ele) {
+			this.each(function (ele) {
 				ele.removeAttribute(name);
 			});
 			return this;
@@ -318,55 +332,86 @@
 			} else {
 				name = 'data-' + name;
 				value += '';
-				this.map(function (ele) {
+				this.each(function (ele) {
 					ele.setAttribute(name, value);
 				});
 				return this;
 			}
 		},
 
+		each: function (fn) {
+			sathy.each(this, fn);
+		},
+
 		map: function (fn) {
-			sathy.each(this,fn);
+			return sathy.map(this, fn);
 		}
 	});
 
 	if(window.addEventListener) {
 		sathy.prototype.on = function (type,handle) {
 			type = (type + '').toLowerCase();
-			this.map(function (ele) {
+			this.each(function (ele) {
 				ele.addEventListener(type,handle,false);
 			});
 		};
 		sathy.prototype.off = function (type,handle) {
 			type = (type + '').toLowerCase();
-			this.map(function (ele) {
+			this.each(function (ele) {
 				ele.removeEventListener(type,handle,false);
+			});
+		};
+		sathy.prototype.one = function (type, handle) {
+			type = (type + '').toLowerCase();
+			this.each(function (ele) {
+				ele.addEventListener(type,function (e) {
+					handle.call(null,e);
+					ele.removeEventListener(type, arguments.callee);
+				},false);
 			});
 		};
 	} else if(window.attachEvent) {
 		sathy.prototype.on = function (type,handle) {
-			type = (type + '').toLowerCase();
-			this.map(function (ele) {
-				ele.attachEvent('on' + type,handle);
+			type = ('on' + type).toLowerCase();
+			this.each(function (ele) {
+				ele.attachEvent(type,handle);
 			});
 		};
 		sathy.prototype.off = function (type,handle) {
-			type = (type + '').toLowerCase();
-			this.map(function (ele) {
-				ele.detachEvent('on' + type,handle);
+			type = ('on' + type).toLowerCase();
+			this.each(function (ele) {
+				ele.detachEvent(type,handle);
+			});
+		};
+		sathy.prototype.one = function (type, handle) {
+			type = ('on' + type).toLowerCase();
+			this.each(function (ele) {
+				ele.attachEvent(type,function (e) {
+					handle.call(null,e);
+					ele.detachEvent(type, arguments.callee);
+				},false);
 			});
 		};
 	} else {
 		sathy.prototype.on = function (type,handle) {
-			type = (type + '').toLowerCase();
-			this.map(function (ele) {
-				ele[ 'on' + type ] = handle;
+			type = ('on' + type).toLowerCase();
+			this.each(function (ele) {
+				ele[ type ] = handle;
 			});
 		};
 		sathy.prototype.off = function (type) {
-			type = (type + '').toLowerCase();
-			this.map(function (ele) {
-				ele[ 'on' + type ] = null;
+			type = ('on' + type).toLowerCase();
+			this.each(function (ele) {
+				ele[ type ] = null;
+			});
+		};
+		sathy.prototype.one = function (type, handle) {
+			type = ('on' + type).toLowerCase();
+			this.each(function (ele) {
+				ele[ type ] = function (e) {
+					handle.call(null, e);
+					ele[ type ] = null;
+				};
 			});
 		};
 	}
