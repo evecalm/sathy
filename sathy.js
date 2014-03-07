@@ -330,25 +330,16 @@
 			return this;
 		},
 
-		data: function  (name,value) {
-			if(!this.length) {
-				if (undefined === value) {
-					return '';
-				} else {
-					return this;
-				}
-			}
 
-			if (undefined === value) {
-				return this[0].getAttribute('data-' + name);
-			} else {
-				name = 'data-' + name;
-				value += '';
-				this.each(function (ele) {
-					ele.setAttribute(name, value);
-				});
-				return this;
-			}
+		remove: function () {
+			this.each(function (ele) {
+				ele.parentNode && ele.parentNode.removeChild(ele);
+			});
+			return this;
+		},
+
+		append: function (str) {
+			// body...
 		},
 
 		each: function (fn) {
