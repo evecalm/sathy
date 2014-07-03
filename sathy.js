@@ -185,7 +185,7 @@
 			}
 		},
 
-		each: function  (arr,fn) {
+		each: function  (arr,fn, context) {
 			var i,len;
 			if ( sathy.isArrayLike(arr) && sathy.isFunction(fn)) {
 				for (i = 0, len = arr.length; i < len; ++i) {
