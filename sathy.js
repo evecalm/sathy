@@ -214,6 +214,15 @@
 
 		trim: function (str) {
 			return (str + '').replace(/^\s+|\s+$/g, '');
+		},
+
+		randomStr: function (length) {
+			length = length || 16;
+			var str = ''
+			do {
+				str += Math.random().toString(32).substr(2);
+			} while (str.length < length);
+			return str.substr(0,length);
 		}
 	});
 
