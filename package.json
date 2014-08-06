@@ -1,0 +1,30 @@
+{
+  "name": "sathy",
+  "description": "Sathy: Make your web app sexy.",
+  "version": "0.0.1",
+  "author": "Saiya Lee",
+  "url": "http://www.evecalm.com",
+  "main": "./dist/sathy.js",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "https://github.com/evecalm/sathy/blob/master/LICENSE"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evecalm/sathy.git"
+  },
+  "devDependencies": {
+    "mocha": "~1.20.1",
+    "should": "~4.0.4",
+    "sinon": "~1.10.2",
+    "gulp": "~3.8.7",
+    "gulp-util": "~2.2.14",
+    "gulp-coffee": "~1.4.3",
+    "gulp-header": "~1.0.2",
+    "gulp-concat": "~2.2.0",
+    "gulp-uglify": "~0.3.0",
+    "gulp-mocha-phantomjs": "~0.2.0"
+  }
+}
