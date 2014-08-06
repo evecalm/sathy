@@ -90,6 +90,23 @@ Sathy.extend
       args = storedArgs.concat args
       fn.apply null, args
 
+  encodeHtml: (html)->
+    divElm = doc.createElement 'div'
+    divElm.appendChild doc.createTextNode html
+    divElm.innerHTML
+
+  decodeHtml: do ->
+    if doc.body.textContent?
+      (html)->
+        divElm = doc.createElement 'div'
+        divElm.innerHTML = html
+        divElm.textContent
+    else
+      (html)->
+        divElm = doc.createElement 'div'
+        divElm.innerHTML = html
+        divElm.innerText
+
 Sathy::extend
   each: (fn)->
     Sathy.each this, fn
