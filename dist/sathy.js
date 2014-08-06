@@ -232,7 +232,7 @@
       } else {
         html += '';
         this.each(function(elm) {
-          return elm.innerHTML = html;
+          elm.innerHTML = html;
         });
         return this;
       }
@@ -251,9 +251,10 @@
             return this[0].textContent;
           } else {
             text += '';
-            return this.each(function(elm) {
-              return elm.textContent = text;
+            this.each(function(elm) {
+              elm.textContent = text;
             });
+            return this;
           }
         };
       } else {
@@ -269,14 +270,16 @@
             return this[0].innerText;
           } else {
             text += '';
-            return this.each(function(elm) {
-              return elm.innerText = text;
+            this.each(function(elm) {
+              elm.innerText = text;
             });
+            return this;
           }
         };
       }
     })(),
     attr: function(name, value) {
+      var first;
       if (!this.length) {
         if (text === void 0) {
           return '';
@@ -289,11 +292,20 @@
       }
       name += '';
       if (value === void 0) {
-        return this[0].getAttribute(name);
+        first = this[0];
+        if (Sathy.isWindow(first)) {
+          return first[name];
+        } else {
+          return first.getAttribute(name);
+        }
       } else {
         value += '';
         this.each(function(elm) {
-          return ele.setAttribute(name, value);
+          if (Sathy.isWindow(elm)) {
+            elm[name] = value;
+          } else {
+            elm.setAttribute(name, value);
+          }
         });
         return this;
       }
@@ -304,7 +316,7 @@
       }
       name += '';
       this.each(function(elm) {
-        return ele.removeAttribute(name);
+        ele.removeAttribute(name);
       });
       return this;
     },
@@ -313,7 +325,7 @@
         return this;
       }
       this.each(function(elm) {
-        return ele.parentNode && ele.parentNode.removeChild(ele);
+        ele.parentNode && ele.parentNode.removeChild(ele);
       });
       return this;
     }
@@ -323,71 +335,57 @@
     Sathy.prototype.on = function(type, handle, capture) {
       type += '';
       capture = !!capture;
-      return this.each(function(elm) {
+      this.each(function(elm) {
         elm.addEventListener(type, handle, capture);
       });
+      return this;
     };
     Sathy.prototype.off = function(type, handle, capture) {
       type += '';
       capture = !!capture;
-      return this.each(function(elm) {
+      this.each(function(elm) {
         elm.removeEventListener(type, handle, capture);
       });
+      return this;
     };
     Sathy.prototype.one = function(type, handle, capture) {
       type += '';
       capture = !!capture;
-      return this.each(function(elm) {
-        return elm.addEventListener(type, function(e) {
+      this.each(function(elm) {
+        elm.addEventListener(type, function(e) {
           handle.call(elm, e);
           elm.removeEventListener(type, arguments.callee);
         }, capture);
       });
+      return this;
     };
   } else if (window.attachEvent) {
     Sathy.prototype.on = function(type, handle) {
       type = 'on' + type;
-      return this.each(function(elm) {
-        return elm.attachEvent(type, handle);
+      this.each(function(elm) {
+        elm.attachEvent(type, handle);
       });
+      return this;
     };
     Sathy.prototype.off = function(type, handle) {
       type = 'on' + type;
-      return this.each(function(elm) {
-        return elm.detachEvent(type, handle);
+      this.each(function(elm) {
+        elm.detachEvent(type, handle);
       });
+      return this;
     };
     Sathy.prototype.one = function(type, handle) {
       type = 'on' + type;
-      return this.each(function(elm) {
-        return elm.attachEvent(type, function(e) {
+      this.each(function(elm) {
+        elm.attachEvent(type, function(e) {
           handle.call(elm, e);
-          return elm.detachEvent(type, arguments.callee);
+          elm.detachEvent(type, arguments.callee);
         });
       });
+      return this;
     };
   } else {
-    Sathy.prototype.on = function(type, handle) {
-      type = 'on' + type;
-      return this.each(function(elm) {
-        return elm[type] = handle;
-      });
-    };
-    Sathy.prototype.off = function(type) {
-      type = 'on' + type;
-      return this.each(function(elm) {
-        return elm[type] = null;
-      });
-    };
-    Sathy.prototype.one = function(type, handle) {
-      type = 'on' + type;
-      return this.each(function(elm) {
-        return elm[type] = function(e) {
-          handle.call(elm, e);
-          return elm[type] = null;
-        };
-      });
-    };
+    window.alert('DAMN IT');
   }
 
   Sathy.prototype.extend({
@@ -409,7 +407,7 @@
         }
         styleArr = ';' + styleArr.join(';') + ';';
         this.each(function(elm) {
-          return elm.style.cssText += styleArr;
+          elm.style.cssText += styleArr;
         });
       }
       return this;

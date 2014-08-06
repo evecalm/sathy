@@ -1,4 +1,5 @@
 Sathy::extend
+  
   html: (html)->
     if not @length
       if html is undefined
@@ -70,6 +71,7 @@ Sathy::extend
     name += ''
     @each (elm)->
       ele.removeAttribute name
+      return
     return this
 
 
@@ -77,4 +79,5 @@ Sathy::extend
     if not @length then return this
     @each (elm)->
       ele.parentNode && ele.parentNode.removeChild ele
+      return
     return this
