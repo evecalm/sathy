@@ -75,19 +75,49 @@
   };
 
   Sathy.extend({
-    isArray: function(val) {
-      return toString.call(val) === '[object Array]';
+
+    /**
+     * judge a obj's type or get it's type name
+     * @param  {Object}  obj  obj to judge
+     * @param  {String}  type type name, if ommit it, get type name
+     * @return {Boolean or String}      result
+     */
+    type: function(obj, type) {
+      var t;
+      if (obj != null) {
+        t = toString.call(obj);
+        if (arguments.length === 1) {
+          return t.slice(8, -1);
+        } else {
+          return t.toLowerCase() === ("[object " + type + "]").toLowerCase();
+        }
+      } else {
+        t = '' + obj;
+        if (arguments.length > 1) {
+          return t.toLowerCase() === ('' + type).toLowerCase();
+        } else {
+          return t;
+        }
+      }
+    },
+    isArray: Array.isArray || function(obj) {
+      return this.type(obj, 'Array');
     },
     isArrayLike: function(val) {
-      return val && (this.isArray(val) || ((val.length >> 0) === val.length && val.length >= 0 && (val.length - 1) in val));
+      var len;
+      len = val && val.length;
+      return !!val && (this.isArray(val) || ((len >> 0) === len && len >= 0 && (!len || (len - 1) in val)));
     },
     isFunction: function(fn) {
-      return fn && 'apply' in fn && /\bfunction\b/.test(fn);
+      return !!fn && 'apply' in fn && /\bfunction\b/.test('' + fn);
     },
     makeArray: function(arr) {
       var ret, v, _i, _len;
+      if (this.isArray(arr)) {
+        return arr;
+      }
       ret = [];
-      if (Sathy.isArrayLike(arr)) {
+      if (this.isArrayLike(arr)) {
         for (_i = 0, _len = arr.length; _i < _len; _i++) {
           v = arr[_i];
           ret.push(v);
@@ -206,9 +236,44 @@
         args = storedArgs.concat(args);
         return fn.apply(null, args);
       };
-    }
-  });
+    },
 
+    /**
+     * encode html string(with special chars like '>' '<' '&', etc) to entities
+     * @param  {String} htmlStr html string
+     * @return {String}         encoded string
+     */
+    encodeHtml: function(htmlStr) {
+      var divElm;
+      divElm = doc.createElement('div');
+      divElm.appendChild(doc.createTextNode(htmlStr));
+      return divElm.innerHTML;
+    },
+
+    /**
+     * decode encoded html string
+     * @param  {String} encodedString encoded string
+     * @return {String} decoded string
+     */
+    decodeHtml: (function() {
+      if (doc.body.textContent != null) {
+        return function(encodedStr) {
+          var divElm;
+          divElm = doc.createElement('div');
+          divElm.innerHTML = encodedStr;
+          return divElm.textContent;
+        };
+      } else {
+        return function(encodedStr) {
+          var divElm;
+          divElm = doc.createElement('div');
+          divElm.innerHTML = encodedStr;
+          return divElm.innerText;
+        };
+      }
+    })()
+  });
+  
   Sathy.prototype.extend({
     each: function(fn) {
       return Sathy.each(this, fn);
@@ -219,6 +284,7 @@
   });
 
   Sathy.prototype.extend({
+
     html: function(html) {
       if (!this.length) {
         if (html === void 0) {

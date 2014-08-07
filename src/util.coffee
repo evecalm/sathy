@@ -1,17 +1,43 @@
 Sathy.extend
-  isArray: (val)->
-    toString.call(val) is '[object Array]'
+  ###*
+   * judge a obj's type or get its type name
+   * @param  {Object}  obj  obj to judge
+   * @param  {String}  type type name, if ommit it, get type name
+   * @return {Boolean or String}      result
+  ###
+  type: (obj, type)->
+    if obj?
+      t = toString.call obj
+      if arguments.length is 1
+        t.slice 8, -1
+      else
+        t.toLowerCase() is "[object #{type}]".toLowerCase()
+    else
+      t = '' + obj
+      if arguments.length > 1
+        t.toLowerCase() is ('' + type).toLowerCase()
+      else
+        t
+  # judge an array
+  isArray: Array.isArray or (obj)->
+    @type obj, 'Array'
+
+  # judge an array like object
   isArrayLike: (val)->
-    val and (@isArray(val) or
-      ((val.length>>0) is val.length and val.length >= 0 and (val.length-1) of val)
+    len = val and val.length
+    !!val and ( @isArray(val) or
+      ( (len>>0) is len and len >= 0 and (not len or (len-1) of val) )
     )
 
+  # judge an function
   isFunction: (fn)->
-    fn and 'apply' of fn and /\bfunction\b/.test fn
+    !!fn and 'apply' of fn and /\bfunction\b/.test '' + fn
 
+  # make an array like obj to a real array
   makeArray: (arr)->
+    if @isArray arr then return arr
     ret = []
-    if Sathy.isArrayLike arr
+    if @isArrayLike arr
       for v in arr
         ret.push v
     ret
@@ -21,7 +47,7 @@ Sathy.extend
    * @param  {Array}   arr      array like object
    * @param  {Function} fn      works on array elements
    * @param  {Object}   context fn's excute context
-   * @return {undefined}
+   * @return {Array}            return param arr itself
   ###
   each: (arr, fn, context)->
     if arr and fn
@@ -31,7 +57,7 @@ Sathy.extend
       else
         for own k, v of arr
           fn.call context or v, v, k
-    return
+    return arr
 
   ###*
    * just like array, but return an array of result
@@ -90,22 +116,33 @@ Sathy.extend
       args = storedArgs.concat args
       fn.apply null, args
 
-  encodeHtml: (html)->
+  ###*
+   * encode html string(with special chars like '>' '<' '&', etc) to entities
+   * @param  {String} htmlStr html string
+   * @return {String}         encoded string
+  ###
+  encodeHtml: (htmlStr)->
     divElm = doc.createElement 'div'
-    divElm.appendChild doc.createTextNode html
+    divElm.appendChild doc.createTextNode htmlStr
     divElm.innerHTML
 
+  ###*
+   * decode encoded html string
+   * @param  {String} encodedString encoded string
+   * @return {String} decoded string
+  ###
   decodeHtml: do ->
     if doc.body.textContent?
-      (html)->
+      (encodedStr)->
         divElm = doc.createElement 'div'
-        divElm.innerHTML = html
+        divElm.innerHTML = encodedStr
         divElm.textContent
     else
-      (html)->
+      (encodedStr)->
         divElm = doc.createElement 'div'
-        divElm.innerHTML = html
+        divElm.innerHTML = encodedStr
         divElm.innerText
+
 
 Sathy::extend
   each: (fn)->
