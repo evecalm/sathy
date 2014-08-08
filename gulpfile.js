@@ -6,6 +6,7 @@ header = require('gulp-header')
 concat = require('gulp-concat')
 uglify = require('gulp-uglify')
 mocha  = require('gulp-mocha-phantomjs')
+wrap = require('gulp-wrap-umd')
 
 source = [
   'src/sathy.coffee',
@@ -28,7 +29,12 @@ banner = function() {
 gulp.task('default', function() {
   compiled = gulp.src(source)
     .pipe(concat('sathy.js'))
-    .pipe(coffee().on('error', util.log))
+    .pipe(coffee({bare: true}).on('error', util.log))
+    .pipe(wrap({
+      namespace: 'Sathy',
+      deps: [{name: 'window', globalName: 'window', paramName: 'root'}],
+      exports: 'Sathy'
+    }))
     .pipe(header(banner()))
     .pipe(gulp.dest('dist'))
 
