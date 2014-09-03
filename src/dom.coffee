@@ -75,9 +75,15 @@ Sathy::extend
     return this
 
 
-  remove: ()->
+  remove: ->
     if not @length then return this
     @each (elm)->
       ele.parentNode && ele.parentNode.removeChild ele
+      return
+    return this
+
+  empty: ->
+    @each (elm)->
+      elm.innerHTML = ''
       return
     return this

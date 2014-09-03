@@ -29,6 +29,14 @@ Sathy.extend
       ( (len>>0) is len and len >= 0 and (not len or (len-1) of val) )
     )
 
+  # judge an empty object
+  isEmptyObj: (obj)->
+    if !obj then return false
+    for own k of object
+      return true
+    return false
+    
+
   # judge an function
   isFunction: (fn)->
     !!fn and 'apply' of fn and /\bfunction\b/.test '' + fn
@@ -142,7 +150,46 @@ Sathy.extend
         divElm = doc.createElement 'div'
         divElm.innerHTML = encodedStr
         divElm.innerText
+  ###*
+   * parse Url params, like hash or queryString
+   * @param  {String}  url    url to parse, if ommit, use location's url
+   * @param  {Boolean} isHash if true, parse hash, or query string
+   * @return {Object}         if nothing in param, return false,
+   *                             or key-value pairs object
+  ###
+  parseUrlParam: (url, isHash)->
+    data = {}
+    if @type url, 'string'
+      anchor = doc.createElement 'a'
+      anchor.href = url
+    else
+      anchor = window.location
+      isHash = url
+      
+    if isHash
+      query = anchor.hash.replace /^\#/,''
+    else
+      query = anchor.search.replace /^\?/,''
+    if !query then return false
+    query = query.split '&'
+    for ele in query
+      tmp = ele.split '='
+      data[ decodeURIComponent( tmp[0] ) ] = decodeURIComponent( if tmp[1]? then tmp[1] else '' )
+    return data
 
+  ###*
+   * turn a dasherized string to camel case
+   * @param  {String} str dasherized string
+   * @return {String}     camel case string
+  ###
+  camelCase: (str)->
+    if str?
+      str += ''
+      str.replace /-[a-z]/g, (t)->
+        t.toUpperCase().charAt(1)
+    else
+      ''
+    
 
 Sathy::extend
   each: (fn)->
